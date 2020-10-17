@@ -196,7 +196,7 @@ class GatherData(WindowStats, MouseStats, KeyboardStats, Options):
             if self.time_spend > self.time_spend_lenght:
                 # from here we save data we gathered
                 print(f"{window_previous_activity}")
-                # TODO: saving data
+                # TODO: saving data a
 
             # loading values for current window
             self.window_title, self.pid, self.application_name = self.load_win_info()
