@@ -1,0 +1,10 @@
+.idea/
+tests/
+venv/
+__pycache__/
+pc_tracker.egg-info/
+dist/
+build/
+pc_tracker/__pycache__/
+pc_tracker/examples/__pycache__/
+System Volume Information/
