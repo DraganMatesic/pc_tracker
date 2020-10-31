@@ -2,6 +2,7 @@ import json
 import logging
 from logging.handlers import RotatingFileHandler
 
+
 def json_serial(object_):
     try:
         return object_.__dict__

@@ -1,8 +1,13 @@
 from setuptools import setup, find_packages
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup(name='pc_tracker',
       version='0.0.0',
-      description='Framework for tracking events on PC',
+      description='Framework for tracking activity on PC',
+      long_description=long_description,
+      long_description_content_type="text/markdown",
       author='Dragan Matesic',
       author_email='dragan.matesic@gmail.com',
       license='MIT',
@@ -10,5 +15,5 @@ setup(name='pc_tracker',
       zip_safe=False,
       include_package_data=True,
       install_requires=['pywin32', 'psutil', 'pynput', 'pysocks'],
-      scripts=['scripts/local_run.py']
+      scripts=['scripts/manage.py']
       )
