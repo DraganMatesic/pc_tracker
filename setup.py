@@ -10,4 +10,5 @@ setup(name='pc_tracker',
       zip_safe=False,
       include_package_data=True,
       install_requires=['pywin32', 'psutil', 'pynput', 'pysocks'],
+      scripts=['scripts/local_run.py']
       )

@@ -1,9 +1,12 @@
+import os
 import re
 import sys
+import json
 import socket
 import psutil
 import hashlib
 import getpass
+import logging
 import subprocess
 from time import sleep
 from win32gui import *
@@ -11,7 +14,9 @@ from win32api import *
 from pynput import mouse
 from win32process import *
 from pynput import keyboard
-from datetime import datetime
+from datetime import datetime, timedelta
+from pc_tracker.settings import save_config
+from pc_tracker import logsys
 
 # https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 
@@ -154,7 +159,8 @@ class KeyboardStats:
 
 
 class GatherData(WindowStats, MouseStats, KeyboardStats, Options):
-    def __init__(self):
+    def __init__(self, local=0):
+        self.local = local
         self.locked_status = False
         self.current_data = dict()
 
@@ -172,6 +178,9 @@ class GatherData(WindowStats, MouseStats, KeyboardStats, Options):
         self.idle_data = dict()
         self.idle_start_time = None
         self.active_time = 0
+
+        self.history_log = self.history_log_path()
+        self.history_logger = logsys.history_logger_simple(self.history_log)
 
     def reset_idle(self):
         self.idle_periods = dict()
@@ -196,7 +205,12 @@ class GatherData(WindowStats, MouseStats, KeyboardStats, Options):
             if self.time_spend > self.time_spend_lenght:
                 # from here we save data we gathered
                 print(f"{window_previous_activity}")
-                # TODO: saving data a
+                if self.local == 1:
+                    event_id = window_previous_activity.get('event_id')
+                    self.history_logger.info(event_id, window_previous_activity)
+
+                # TODO: saving data remotely with logging module
+                # TODO: saving data over HTTP request to server and saving data in db
 
             # loading values for current window
             self.window_title, self.pid, self.application_name = self.load_win_info()
@@ -219,9 +233,37 @@ class GatherData(WindowStats, MouseStats, KeyboardStats, Options):
         else:
             self.locked_status = False
 
+    def history_log_path(self, create=False):
+        current_date = datetime.now().date()
+        with open(save_config, 'r') as f:
+            save_path = f.read()
+            host_folder = os.path.join(save_path, self.host_local_ip)
+        user_folder = os.path.join(host_folder, self.login_user)
+        daily_folder = os.path.join(user_folder, user_folder, current_date.strftime("%Y%m%d"))
+        if create is True:
+            folders = [host_folder, user_folder, daily_folder]
+            for folder in folders:
+                for i in range(3):
+                    if os.path.exists(folder) is False:
+                        os.mkdir(folder)
+                    else:
+                        break
+                    sleep(0.2)
+        return os.path.join(daily_folder, 'history')
+
+
     def events_tracker(self):
         lock_switch = False
+        folder_check_date = (datetime.now()-timedelta(days=1)).date()
+
         while True:
+            if self.local == 1:
+                # check folder existence
+                current_date = datetime.now().date()
+                if folder_check_date != current_date:
+                    self.history_log = self.history_log_path(create=True)
+                    folder_check_date = current_date
+
             self.check_lock_screen()
             if lock_switch is True and self.locked_status is False:
                 self.login_user = getpass.getuser()
