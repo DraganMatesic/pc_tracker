@@ -2,32 +2,34 @@ import os
 import sys
 import pickle
 import getpass
-
-from pc_tracker import client
+import argparse
 from subprocess import Popen, PIPE, call
 from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
 
-pc_tracker_dir = r'C:\Users\{}\Documents\pc_tracker_client'.format(getpass.getuser())
-
-
-try:
+if sys.version.startswith('3'):
+    from pc_tracker import client
     from tkinter import *
-    from os.path import join
     from functools import partial
-    from tkinter import ttk
     from tkinter import messagebox
     from tkinter import filedialog
-    # from pc_tracker.settings import framework_folder, save_config
-except ImportError:
+else:
+    # this happens to users who have python 2.7 and 3.x versions
+    print("wrong version", sys.version)
     p = Popen('py -c "import sys; import os; sys.stdout.write(sys.executable)" ', stdout=PIPE)
     lines = p.stdout.readlines()
     real_executable = lines[0]
+    if type(real_executable) is bytes:
+        real_executable = real_executable.decode()
+    print(real_executable)
 
     p = Popen('py -c "import sys; import os; sys.stdout.write(os.path.dirname(sys.executable))"', stdout=PIPE)
     lines = p.stdout.readlines()
     main_path = lines[0].decode()
     pycon_path = os.path.join(main_path, 'manage.py')
-    call('"{}" "{}"'.format(real_executable, pycon_path))
+    print('\nTry to use following command on this PC(without brackets):\n["{}" "{}"]\nArgument is required. For list of arguments write manage.py -h'.format(real_executable, pycon_path))
+    exit()
+
+pc_tracker_dir = r'C:\Users\{}\Documents\pc_tracker_client'.format(getpass.getuser())
 
 
 def create_config_folder():
@@ -140,30 +142,27 @@ class Configuration:
                 sys.stdout.write("\n Can't locate manage.py at {0} \n make sure you are using python "
                                  "version where you installed this package then try again...".format(pycon_path))
                 input("Press Enter to continue")
-                exit()
+                return 400
             sys.stdout.write("\rPath status O.K.\n")
             return 200
         else:
             sys.stdout.write('\rPython3 is required\n')
             input("Press Enter to continue")
-        return 400
+            return 400
 
 
 if __name__ == '__main__':
-    argvs = sys.argv
-    if 'config' in argvs:
-        api = Configuration()
-        api.config_form()
-    elif 'configcl' in argvs:
-        api = Configuration()
-        api.config_form(client=True)
-    elif 'runclient' in argvs:
-        api = client.GatherData()
-        api.events_tracker()
-    else:
-        argvs_op = {'config': "Starts configuration form.",
-                    'runclient': "Starts client in windowed mode."}
-        sys.stdout.write('\rArgument required:\n')
-        input("Press Enter to continue")
+    parser = argparse.ArgumentParser(description='Pc tracker - manage.py')
+    parser.add_argument('cmd', choices=['config', 'configcl', 'runclient'])
+    args = parser.parse_args()
 
-
+    if sys.version.startswith('3'):
+        if 'config' in args.cmd:
+            api = Configuration()
+            api.config_form()
+        elif 'configcl' in args.cmd:
+            api = Configuration()
+            api.config_form(client=True)
+        elif 'runclient' in args.cmd:
+            api = client.GatherData()
+            api.events_tracker()
