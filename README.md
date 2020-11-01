@@ -1,14 +1,14 @@
 # PC tracker - client
 #### About
-PC tracker - client is project that focuses on recording activity that happens on PC Windows OS.
-####Currently it tracks:
+PC tracker - client is project that focuses on recording activity that happens on PC Windows OS.<br>
+#####Currently it tracks:
 - local ip address of PC in use
 - name of user that has logged in
 - what application were in use
 - title of those applications
 - how much time did user spend on per application
-- how much time did user spend in idle state during that time on app and idle periods (time and date + duration)
-####Data can be saved:
+- how much time did user spend in idle state during that time on app and idle periods (time and date + duration)<br>
+#####Data can be saved:
 - on local PC where data is gathering
 - inside local network on some shared network folder
 - currently it doesn't support saving activity data on remote pc that is not part of your local network
