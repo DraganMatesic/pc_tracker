@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='pc_tracker',
-      version='0.0.0',
+      version='0.0.1',
       description='Framework for tracking activity on PC',
       long_description=long_description,
       long_description_content_type="text/markdown",
