@@ -2,11 +2,11 @@ import os
 import re
 import sys
 import json
+import pickle
 import socket
 import psutil
 import hashlib
 import getpass
-import logging
 import subprocess
 from time import sleep
 from win32gui import *
@@ -14,11 +14,13 @@ from win32api import *
 from pynput import mouse
 from win32process import *
 from pynput import keyboard
-from datetime import datetime, timedelta
 from pc_tracker import logsys
+from datetime import datetime, timedelta
 
 
 # https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+pc_tracker_dir = r'C:\Users\{}\Documents\pc_tracker_client'.format(getpass.getuser())
+setings_path = os.path.join(pc_tracker_dir, 'setings_path')
 
 
 def set_event_id():
@@ -159,9 +161,11 @@ class KeyboardStats:
 
 
 class GatherData(WindowStats, MouseStats, KeyboardStats, Options):
-    def __init__(self, settings):
+    def __init__(self, settings=None):
         self.locked_status = False
         self.current_data = dict()
+        if settings is None:
+            settings = self.load_settings()
         self.data_location = settings.get('data_path')
 
         # inherits variables for current window data
@@ -181,6 +185,15 @@ class GatherData(WindowStats, MouseStats, KeyboardStats, Options):
 
         self.history_log = self.history_log_path(create=True)
         self.history_logger = logsys.history_logger_simple(self.history_log)
+
+    def load_settings(self):
+        # getting global settings path
+        with open(setings_path, 'r') as f:
+            global_setings = f.read()
+            # loading data from global settings path
+            with open(global_setings, 'rb') as f:
+                settings_data = pickle.load(f)
+                return settings_data
 
     def reset_idle(self):
         self.idle_periods = dict()
@@ -204,7 +217,7 @@ class GatherData(WindowStats, MouseStats, KeyboardStats, Options):
             # save status only if time spent on window is longer then specified in Options
             if self.time_spend > self.time_spend_lenght:
                 # from here we save data we gathered
-                print(f"{window_previous_activity}")
+                # print(f"{window_previous_activity}")
                 event_id = window_previous_activity.get('event_id')
                 self.history_logger.info(event_id, window_previous_activity)
 
@@ -295,3 +308,15 @@ class GatherData(WindowStats, MouseStats, KeyboardStats, Options):
                     print(error)
 
             sleep(0.1)
+
+
+def start():
+    try:
+        api = GatherData()
+        api.events_tracker()
+    except KeyboardInterrupt as e:
+        pass
+
+
+if __name__ == '__main__':
+    start()

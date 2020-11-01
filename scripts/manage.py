@@ -62,7 +62,7 @@ class Configuration:
     def admin_check(self):
         try:
             os.listdir(os.sep.join([os.environ.get('SystemRoot','C:\\windows'),'temp']))
-        except WindowsError(5):
+        except WindowsError:
             return False
         return True
 
@@ -92,7 +92,9 @@ class Configuration:
             os.chmod(settings_file, S_IREAD | S_IRGRP | S_IROTH)
         win.destroy()
 
-    def config_form(self):
+    def config_form(self, client=False):
+        if client is True:
+            self.admin = False
         # setting up menu bar
         self.root.title('Configuration')
         frame = Frame(self.root, pady=5, padx=5)
@@ -147,60 +149,18 @@ class Configuration:
         return 400
 
 
-class ClientRun(Configuration):
-    def __init__(self, nowin=False):
-        Configuration.__init__(self)
-
-    def start(self):
-        global_setings = ''
-        settings_data = dict()
-        precheck_status = self.precheck()
-        if precheck_status == 200:
-            if os.path.exists(self.setings_path) is False:
-                self.config_form()
-            else:
-                with open(self.setings_path, 'r') as f:
-                    global_setings = f.read()
-                    with open(global_setings, 'rb') as f:
-                        settings_data = pickle.load(f)
-                        print(settings_data)
-            try:
-                if os.path.exists(global_setings) is True:
-                    api = client.GatherData(settings=settings_data)
-                    api.events_tracker()
-            except KeyboardInterrupt:
-                pass
-
-
 if __name__ == '__main__':
     argvs = sys.argv
     if 'config' in argvs:
         api = Configuration()
         api.config_form()
+    elif 'configcl' in argvs:
+        api = Configuration()
+        api.config_form(client=True)
     elif 'runclient' in argvs:
-        open("xxx", 'w')
-        api = ClientRun()
-        api.start()
-    elif 'runclient_winless' in argvs:
-        p = Popen('pyw -c "import sys; import os; sys.stdout.write(sys.executable)" ', stdout=PIPE)
-        lines = p.stdout.readlines()
-        real_executable = lines[0]
-        if type(real_executable) is bytes:
-            real_executable = real_executable.decode()
-
-        p = Popen('py -c "import sys; import os; sys.stdout.write(os.path.dirname(sys.executable))"', stdout=PIPE)
-        lines = p.stdout.readlines()
-        main_path = lines[0]
-        if type(main_path) is bytes:
-            main_path = main_path.decode()
-
-        pycon_path = os.path.join(main_path, 'manage.py')
-        print(real_executable, pycon_path)
-        cmd = '"{0}" "{1}" runclient'.format(real_executable, pycon_path)
-        print(cmd)
-        os.system(cmd)
+        api = client.GatherData()
+        api.events_tracker()
     else:
-        open("xxxy", 'w')
         argvs_op = {'config': "Starts configuration form.",
                     'runclient': "Starts client in windowed mode."}
         sys.stdout.write('\rArgument required:\n')
