@@ -35,7 +35,7 @@ class Options:
     # how many seconds must pass that windows data may be considered valuable logging
     time_spend_lenght = 0
 
-    # GDPR - if some of data you consider to be private or don't want specific data in dataset add them here
+    # GDPR - if some of the data you consider to be private or don't want specific data in dataset add them here
     # private_data = ['login_user', ]
     private_data = []
 
@@ -85,8 +85,6 @@ class MouseStats:
         self.mouse_move = False
         self.movement_detected = datetime.now()
         self.mouse_timer = 0
-        self.event_listener = mouse.Listener(on_scroll=self.on_scroll, on_click=self.on_click)
-        self.event_listener.start()
 
         self.scroll_direction = None
         self.scroll_start = datetime.now()
@@ -140,14 +138,17 @@ class MouseStats:
             self.scroll_position = None
             self.mouse_active()
 
+    def mouse_listen(self):
+        event_listener = mouse.Listener(on_scroll=self.on_scroll, on_click=self.on_click, daemon=True)
+        event_listener.start()
+
 
 class KeyboardStats:
     def __init__(self):
-        self.keyboard_timer= 0
-        self.keyboard_listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
-        self.keyboard_listener.start()
-        self.press_detected = datetime.now()
+        self.keyboard_timer = 0
         self.key_pressed = False
+        self.press_detected = datetime.now()
+
 
     def on_press(self, key):
         self.key_pressed = True
@@ -158,6 +159,10 @@ class KeyboardStats:
 
     def keyboard_events(self):
         self.keyboard_idle_time = (datetime.now() - self.press_detected).total_seconds()
+
+    def keyboard_listen(self):
+        keyboard_listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release, daemon=True)
+        keyboard_listener.start()
 
 
 class GatherData(WindowStats, MouseStats, KeyboardStats, Options):
@@ -261,6 +266,9 @@ class GatherData(WindowStats, MouseStats, KeyboardStats, Options):
     def events_tracker(self):
         lock_switch = False
         folder_check_date = (datetime.now()-timedelta(days=1)).date()
+
+        self.keyboard_listen()
+        self.mouse_listen()
 
         while True:
             # check folder existence
